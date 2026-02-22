@@ -28,6 +28,9 @@ const controls = {
   bgTransparent: document.querySelector("#bgTransparent"),
   bgA: document.querySelector("#bgA"),
   bgB: document.querySelector("#bgB"),
+  fxRefraction: document.querySelector("#fxRefraction"),
+  fxAberration: document.querySelector("#fxAberration"),
+  fxGrain: document.querySelector("#fxGrain"),
 };
 
 let state = loadState();
@@ -111,6 +114,9 @@ function randomize() {
     colorA: randomColorToHex(randomColor()),
     colorB: randomColorToHex(randomColor()),
     colorC: randomColorToHex(randomColor()),
+    fxRefraction: Math.random() * 0.28,
+    fxAberration: Math.random() * 0.008,
+    fxGrain: Math.random() * 0.22,
     seed: Math.random(),
   };
   state = mergeState(state, randomState);

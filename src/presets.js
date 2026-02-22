@@ -17,6 +17,9 @@ export const DEFAULT_STATE = {
   bgTransparent: false,
   bgA: "#091427",
   bgB: "#1e325b",
+  fxRefraction: 0.18,
+  fxAberration: 0.0026,
+  fxGrain: 0.075,
   seed: 0.17,
 };
 
@@ -40,6 +43,9 @@ export const PRESETS = {
     bgTransparent: false,
     bgA: "#091122",
     bgB: "#223666",
+    fxRefraction: 0.16,
+    fxAberration: 0.0018,
+    fxGrain: 0.055,
     seed: 0.24,
   },
   pearl: {
@@ -61,6 +67,9 @@ export const PRESETS = {
     bgTransparent: false,
     bgA: "#0c1422",
     bgB: "#1d2c44",
+    fxRefraction: 0.11,
+    fxAberration: 0.0015,
+    fxGrain: 0.08,
     seed: 0.62,
   },
   mercury: {
@@ -82,6 +91,9 @@ export const PRESETS = {
     bgTransparent: false,
     bgA: "#050a15",
     bgB: "#1a2240",
+    fxRefraction: 0.24,
+    fxAberration: 0.0042,
+    fxGrain: 0.12,
     seed: 0.44,
   },
   neon: {
@@ -103,6 +115,9 @@ export const PRESETS = {
     bgTransparent: false,
     bgA: "#02070f",
     bgB: "#211137",
+    fxRefraction: 0.32,
+    fxAberration: 0.0068,
+    fxGrain: 0.16,
     seed: 0.81,
   },
 };

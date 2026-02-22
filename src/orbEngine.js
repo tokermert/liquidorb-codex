@@ -3,6 +3,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 const VERTEX_PATCH = `
@@ -39,12 +40,101 @@ uniform vec3 uColorC;
 varying float vNoise;
 `;
 
+const SCREEN_VERTEX_SHADER = `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const REFRACTION_SHADER = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uTime: { value: 0 },
+    uStrength: { value: 0.16 },
+  },
+  vertexShader: SCREEN_VERTEX_SHADER,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float uTime;
+    uniform float uStrength;
+    varying vec2 vUv;
+
+    void main() {
+      vec2 centered = vUv - 0.5;
+      float radius = length(centered);
+      vec2 dir = normalize(centered + 1e-6);
+
+      float radial = smoothstep(0.95, 0.0, radius) * 0.012 * uStrength;
+      float ripple = sin((radius * 28.0) - (uTime * 4.2)) * 0.0014 * uStrength;
+      vec2 wobble = vec2(
+        sin((vUv.y + uTime * 0.7) * 31.0),
+        cos((vUv.x - uTime * 0.5) * 27.0)
+      ) * ripple;
+
+      vec2 offset = dir * radial + wobble;
+      gl_FragColor = texture2D(tDiffuse, vUv + offset);
+    }
+  `,
+};
+
+const CHROMA_SHADER = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uAmount: { value: 0.0016 },
+  },
+  vertexShader: SCREEN_VERTEX_SHADER,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float uAmount;
+    varying vec2 vUv;
+
+    void main() {
+      vec2 dir = normalize(vUv - 0.5 + 1e-6);
+      vec2 offset = dir * uAmount;
+      float r = texture2D(tDiffuse, vUv + offset).r;
+      float g = texture2D(tDiffuse, vUv).g;
+      float b = texture2D(tDiffuse, vUv - offset).b;
+      gl_FragColor = vec4(r, g, b, 1.0);
+    }
+  `,
+};
+
+const GRAIN_SHADER = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uTime: { value: 0 },
+    uAmount: { value: 0.08 },
+  },
+  vertexShader: SCREEN_VERTEX_SHADER,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float uTime;
+    uniform float uAmount;
+    varying vec2 vUv;
+
+    float hash(vec2 p) {
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    }
+
+    void main() {
+      vec4 base = texture2D(tDiffuse, vUv);
+      float grain = hash(vUv * vec2(1543.2, 923.4) + uTime * 137.0) - 0.5;
+      float vignette = smoothstep(0.95, 0.25, distance(vUv, vec2(0.5)));
+      vec3 color = base.rgb + grain * uAmount * vignette;
+      gl_FragColor = vec4(color, base.a);
+    }
+  `,
+};
+
 export class OrbEngine {
   constructor(canvas) {
     this.canvas = canvas;
     this.scene = new THREE.Scene();
     this.clock = new THREE.Clock();
     this.progress = 0;
+    this.postTime = 0;
     this.state = null;
     this.shader = null;
 
@@ -69,6 +159,12 @@ export class OrbEngine {
     this.composer.addPass(this.renderPass);
     this.bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.75, 0.5, 0.22);
     this.composer.addPass(this.bloomPass);
+    this.refractionPass = new ShaderPass(REFRACTION_SHADER);
+    this.chromaPass = new ShaderPass(CHROMA_SHADER);
+    this.grainPass = new ShaderPass(GRAIN_SHADER);
+    this.composer.addPass(this.refractionPass);
+    this.composer.addPass(this.chromaPass);
+    this.composer.addPass(this.grainPass);
 
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     const room = new RoomEnvironment();
@@ -208,6 +304,9 @@ export class OrbEngine {
     this.bloomPass.strength = 0.18 + nextState.glow * 1.8;
     this.bloomPass.radius = 0.32 + nextState.blob * 0.46;
     this.bloomPass.threshold = 0.22;
+    this.refractionPass.uniforms.uStrength.value = nextState.fxRefraction;
+    this.chromaPass.uniforms.uAmount.value = nextState.fxAberration;
+    this.grainPass.uniforms.uAmount.value = nextState.fxGrain;
 
     this.innerCore.material.color.set(nextState.colorA);
     this.innerCore.material.opacity = THREE.MathUtils.clamp(0.04 + nextState.glow * 0.11, 0.04, 0.17);
@@ -253,6 +352,7 @@ export class OrbEngine {
 
   tick() {
     const delta = this.clock.getDelta();
+    this.postTime += delta;
     if (this.state) {
       if (this.state.animate) {
         const loop = Math.max(this.state.loopDuration, 0.001);
@@ -260,6 +360,8 @@ export class OrbEngine {
       }
       this.deformUniforms.uTime.value = this.state.animate ? this.progress : 0;
     }
+    this.refractionPass.uniforms.uTime.value = this.postTime;
+    this.grainPass.uniforms.uTime.value = this.postTime;
 
     this.orb.rotation.y += delta * 0.13;
     this.innerCore.rotation.y -= delta * 0.06;
