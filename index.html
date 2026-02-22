@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liquid Orb Tool MVP</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <p class="eyebrow">MVP</p>
+          <h1>Liquid Orb Tool</h1>
+        </div>
+        <div class="top-actions">
+          <button id="randomizeBtn" type="button">Randomize</button>
+          <button id="resetBtn" type="button" class="secondary">Reset</button>
+        </div>
+      </header>
+      <main class="workspace">
+        <section class="viewport">
+          <canvas id="app"></canvas>
+          <div class="viewport-hint">Drag to rotate orb</div>
+        </section>
+        <aside class="panel">
+          <section class="group">
+            <h2>Mode</h2>
+            <label class="check">
+              <input id="animate" type="checkbox" checked />
+              Animated
+            </label>
+            <label>
+              Speed
+              <input id="speed" type="range" min="0" max="2" step="0.01" />
+              <span data-value-for="speed"></span>
+            </label>
+            <label>
+              Loop (sec)
+              <input id="loopDuration" type="range" min="2" max="16" step="0.1" />
+              <span data-value-for="loopDuration"></span>
+            </label>
+          </section>
+
+          <section class="group">
+            <h2>Shape</h2>
+            <label>
+              Blob
+              <input id="blob" type="range" min="0" max="1" step="0.01" />
+              <span data-value-for="blob"></span>
+            </label>
+            <label>
+              Detail
+              <input id="detail" type="range" min="0.4" max="3.2" step="0.01" />
+              <span data-value-for="detail"></span>
+            </label>
+            <label>
+              Roundness
+              <input id="roundness" type="range" min="0.5" max="1.5" step="0.01" />
+              <span data-value-for="roundness"></span>
+            </label>
+            <label>
+              Size
+              <input id="size" type="range" min="0.6" max="1.6" step="0.01" />
+              <span data-value-for="size"></span>
+            </label>
+          </section>
+
+          <section class="group">
+            <h2>Color</h2>
+            <label>
+              Color A
+              <input id="colorA" type="color" />
+            </label>
+            <label>
+              Color B
+              <input id="colorB" type="color" />
+            </label>
+            <label>
+              Color C
+              <input id="colorC" type="color" />
+            </label>
+            <label>
+              Iridescence
+              <input id="iridescence" type="range" min="0" max="2.2" step="0.01" />
+              <span data-value-for="iridescence"></span>
+            </label>
+            <label>
+              Glow
+              <input id="glow" type="range" min="0" max="1.2" step="0.01" />
+              <span data-value-for="glow"></span>
+            </label>
+          </section>
+
+          <section class="group">
+            <h2>Background</h2>
+            <label class="check">
+              <input id="bgTransparent" type="checkbox" />
+              Transparent
+            </label>
+            <label>
+              Bg A
+              <input id="bgA" type="color" />
+            </label>
+            <label>
+              Bg B
+              <input id="bgB" type="color" />
+            </label>
+          </section>
+
+          <section class="group">
+            <h2>Presets</h2>
+            <div class="preset-grid">
+              <button type="button" data-preset="glass">Glass</button>
+              <button type="button" data-preset="pearl">Pearl</button>
+              <button type="button" data-preset="mercury">Mercury</button>
+              <button type="button" data-preset="neon">Neon</button>
+            </div>
+          </section>
+
+          <section class="group">
+            <h2>Export</h2>
+            <button id="exportPngBtn" type="button">Export Image (PNG)</button>
+            <button id="exportVideoBtn" type="button">Export Video (WebM)</button>
+            <button id="exportJsonBtn" type="button">Export Preset JSON</button>
+            <button id="exportCodeBtn" type="button">Export Embed Code</button>
+            <p id="statusLine">Ready.</p>
+          </section>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
